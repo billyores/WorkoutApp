@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0d0d0d">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WorkTrack">
+  <meta name="description" content="Workout tracking app — log sessions, follow plans, track progress">
+  <link rel="manifest" href="manifest.json">
+  <title>WorkTrack</title>
+  <link rel="stylesheet" href="css/main.css">
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       App Shell
+  ════════════════════════════════════════════════════════ -->
+  <div id="app">
+
+    <!-- Header -->
+    <header id="app-header">
+      <div class="header-inner">
+        <h1 class="app-title">WorkTrack</h1>
+        <div class="header-actions">
+          <!-- Active plan indicator -->
+          <span id="plan-indicator" class="header-badge hidden"></span>
+          <!-- Settings button -->
+          <button id="settings-btn" class="icon-btn" aria-label="Settings">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main view container — components render here -->
+    <main id="view-container" role="main" aria-live="polite"></main>
+
+    <!-- Bottom navigation -->
+    <nav id="bottom-nav" role="navigation" aria-label="Main navigation">
+
+      <a href="#log" class="nav-item" data-view="log" aria-label="Log workout" aria-current="page">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <!-- Dumbbell icon -->
+          <rect x="2" y="10" width="4" height="4" rx="1"/>
+          <rect x="18" y="10" width="4" height="4" rx="1"/>
+          <line x1="6" y1="12" x2="18" y2="12" stroke-width="3"/>
+          <rect x="5" y="8" width="2" height="8" rx="1"/>
+          <rect x="17" y="8" width="2" height="8" rx="1"/>
+        </svg>
+        <span class="nav-label">Home</span>
+      </a>
+
+      <a href="#calendar" class="nav-item" data-view="calendar" aria-label="Calendar" aria-current="false">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8"  y1="2" x2="8"  y2="6"/>
+          <line x1="3"  y1="10" x2="21" y2="10"/>
+        </svg>
+        <span class="nav-label">Calendar</span>
+      </a>
+
+      <a href="#plans" class="nav-item" data-view="plans" aria-label="Plans" aria-current="false">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>
+        </svg>
+        <span class="nav-label">Plans</span>
+      </a>
+
+      <a href="#history" class="nav-item" data-view="history" aria-label="History" aria-current="false">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+        <span class="nav-label">History</span>
+      </a>
+
+      <a href="#stats" class="nav-item" data-view="stats" aria-label="Stats" aria-current="false">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"/>
+          <line x1="12" y1="20" x2="12" y2="4"/>
+          <line x1="6"  y1="20" x2="6"  y2="14"/>
+        </svg>
+        <span class="nav-label">Stats</span>
+      </a>
+
+    </nav>
+
+  </div><!-- /#app -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Rest Timer Bar (fixed, shared across views)
+  ════════════════════════════════════════════════════════ -->
+  <div class="rest-timer-bar hidden" id="rest-timer-bar">
+    <div>
+      <div style="font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-muted);">Rest</div>
+      <div class="rest-timer-display" id="rest-display">1:30</div>
+    </div>
+    <div class="rest-timer-progress">
+      <div class="rest-timer-fill" id="rest-fill" style="width:100%"></div>
+    </div>
+    <button class="btn btn-sm btn-secondary" id="skip-rest-btn">Skip</button>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Toast notifications
+  ════════════════════════════════════════════════════════ -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Modal (bottom sheet on mobile)
+  ════════════════════════════════════════════════════════ -->
+  <div id="modal-overlay" class="hidden" role="dialog" aria-modal="true">
+    <div id="modal-container" class="hidden"></div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Settings Drawer
+  ════════════════════════════════════════════════════════ -->
+  <div id="drawer-backdrop" class="drawer-backdrop hidden"></div>
+
+  <aside id="settings-drawer" class="drawer hidden" role="complementary" aria-label="Settings">
+    <div class="drawer-header">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="close-settings-btn" aria-label="Close settings">✕</button>
+    </div>
+    <div class="drawer-content">
+
+      <!-- ── About Me ──────────────────────────────────── -->
+      <section class="settings-section" id="about-me-section">
+        <h3>About Me</h3>
+
+        <!-- Height -->
+        <div style="margin-bottom:16px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <span class="settings-hint" style="margin:0;">Height</span>
+            <div class="toggle-group" style="gap:4px;">
+              <button class="toggle-btn active" data-height-unit="imperial">ft / in</button>
+              <button class="toggle-btn"        data-height-unit="metric">cm</button>
+            </div>
+          </div>
+          <div id="height-imperial-row" style="display:flex;align-items:center;gap:8px;">
+            <input class="form-input" type="number" id="profile-height-ft"
+              min="3" max="8" step="1" inputmode="numeric" placeholder="5"
+              style="width:64px;">
+            <span class="settings-hint" style="margin:0;">ft</span>
+            <input class="form-input" type="number" id="profile-height-in"
+              min="0" max="11" step="1" inputmode="numeric" placeholder="10"
+              style="width:64px;">
+            <span class="settings-hint" style="margin:0;">in</span>
+          </div>
+          <div id="height-metric-row" style="display:none;align-items:center;gap:8px;">
+            <input class="form-input" type="number" id="profile-height-cm"
+              min="100" max="250" step="1" inputmode="numeric" placeholder="178"
+              style="width:90px;">
+            <span class="settings-hint" style="margin:0;">cm</span>
+          </div>
+        </div>
+
+        <!-- Current Injuries -->
+        <div>
+          <p class="settings-hint" style="margin-bottom:8px;">
+            Current Injuries — tap a muscle to mark it injured and block it from your workouts
+          </p>
+          <div id="profile-injuries" class="injury-checkbox-grid">
+            <!-- populated dynamically on drawer open -->
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Theme</h3>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-theme-toggle="dark">Dark</button>
+          <button class="toggle-btn" data-theme-toggle="light">Light</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Weight Unit</h3>
+        <div class="toggle-group">
+          <button class="toggle-btn active" data-unit="lbs">lbs</button>
+          <button class="toggle-btn" data-unit="kg">kg</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Week Start</h3>
+        <div class="toggle-group">
+          <button class="toggle-btn" data-weekstart="0">Sunday</button>
+          <button class="toggle-btn active" data-weekstart="1">Monday</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>Default Rest Timer</h3>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="toggle-btn" data-rest="45">45s</button>
+          <button class="toggle-btn active" data-rest="90">90s</button>
+          <button class="toggle-btn" data-rest="120">2min</button>
+          <button class="toggle-btn" data-rest="180">3min</button>
+          <button class="toggle-btn" data-rest="300">5min</button>
+        </div>
+        <p class="settings-hint" style="margin-top:6px;">Plans override this with their own recommended rest times.</p>
+      </section>
+
+      <section class="settings-section">
+        <h3>Data</h3>
+        <p class="settings-hint" id="storage-usage">Loading…</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-danger btn-sm" id="clear-data-btn">Clear All Data</button>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>About</h3>
+        <p class="settings-hint">WorkTrack v0.1.0 — All data stored locally on this device. Export from History to back up.</p>
+      </section>
+
+    </div>
+  </aside>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       Scripts — load order matters (see CLAUDE.md)
+  ════════════════════════════════════════════════════════ -->
+  <script src="js/storage.js" defer></script>
+  <script src="js/data/exercises.js" defer></script>
+  <script src="js/data/workout-plans.js" defer></script>
+  <script src="js/components/drag-drop.js" defer></script>
+  <script src="js/components/muscle-status.js" defer></script>
+  <script src="js/components/workout-logger.js" defer></script>
+  <script src="js/components/calendar.js" defer></script>
+  <script src="js/components/plan-builder.js" defer></script>
+  <script src="js/components/history.js" defer></script>
+  <script src="js/components/goals.js" defer></script>
+  <script src="js/components/stats.js" defer></script>
+  <script src="js/app.js" defer></script>
+
+</body>
+</html>
