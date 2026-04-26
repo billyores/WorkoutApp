@@ -797,6 +797,204 @@ WT.WorkoutLogger = (function () {
     }, 50);
   }
 
+  // ── Edit Saved Workout Modal ───────────────────────────────
+
+  function showEditModal(logId, onSaved) {
+    const rawLog = WT.Storage.getLogs().find((l) => l.id === logId);
+    if (!rawLog) return;
+
+    const editLog = JSON.parse(JSON.stringify(rawLog));
+
+    function buildHTML() {
+      const dateLabel = new Date(editLog.date + 'T00:00:00').toLocaleDateString('en-US', {
+        weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+      });
+      const exercisesHTML = editLog.exercises.map((ex, i) => _buildExerciseCardHTML(ex, i)).join('');
+      return `
+        <div class="modal-handle"></div>
+        <div class="modal-header">
+          <h2>Edit Workout</h2>
+          <button class="icon-btn" onclick="WT.App.closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="edit-modal-body">
+          <div style="font-size:0.875rem;color:var(--text-muted);margin-bottom:16px;">${dateLabel}</div>
+          <div id="edit-exercise-list" style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px;">
+            ${exercisesHTML}
+          </div>
+          <button class="btn btn-ghost btn-sm btn-block" id="edit-add-exercise-btn" style="margin-bottom:8px;">+ Add Exercise</button>
+          <div id="edit-add-exercise-block" class="card hidden" style="margin-bottom:12px;">
+            <div class="card-header">
+              <span class="card-title">Add Exercise</span>
+              <button class="icon-btn" id="edit-close-add-exercise">✕</button>
+            </div>
+            <div class="card-body" style="padding-top:8px;">
+              <div class="search-wrap mb-3">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input class="form-input" id="edit-exercise-search" type="text" placeholder="Search exercises…" autocomplete="off" autocorrect="off" spellcheck="false">
+              </div>
+              <div id="edit-exercise-results" class="exercise-search-results"></div>
+            </div>
+          </div>
+          <textarea class="form-textarea" id="edit-session-notes" placeholder="Session notes (optional)…" rows="2"
+            style="font-size:0.9375rem;margin-bottom:16px;">${editLog.notes || ''}</textarea>
+          <button class="btn btn-primary btn-block" id="edit-save-btn">Save Changes</button>
+        </div>
+      `;
+    }
+
+    WT.App.showModal(buildHTML());
+
+    setTimeout(() => {
+      const body = document.getElementById('edit-modal-body');
+      if (!body) return;
+
+      function reRenderList() {
+        const list = document.getElementById('edit-exercise-list');
+        if (list) list.innerHTML = editLog.exercises.map((ex, i) => _buildExerciseCardHTML(ex, i)).join('');
+      }
+
+      function reRenderSets(ei) {
+        const tbody = document.getElementById(`sets-body-${ei}`);
+        const ex = editLog.exercises[ei];
+        if (!tbody || !ex) return;
+        tbody.innerHTML = ex.sets.map((set, si) => `
+          <tr class="set-row ${set.done ? 'completed' : ''}" data-set="${si}">
+            <td>${si + 1}</td>
+            <td>
+              <input class="set-input" type="number" min="0" max="999" inputmode="decimal"
+                value="${set.reps != null ? set.reps : ''}" placeholder="0"
+                data-field="reps" data-ex="${ei}" data-set="${si}">
+            </td>
+            <td>
+              ${ex.isBodyweight
+                ? '<span class="text-muted" style="font-size:0.8125rem;">BW</span>'
+                : `<input class="set-input" type="number" min="0" max="9999" step="2.5" inputmode="decimal"
+                    value="${set.weight != null ? set.weight : ''}" placeholder="0"
+                    data-field="weight" data-ex="${ei}" data-set="${si}">`
+              }
+            </td>
+            <td>
+              <button class="set-check-btn ${set.done ? 'done' : ''}" data-ex="${ei}" data-set="${si}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+              </button>
+            </td>
+            <td>
+              <button class="set-delete-btn" data-ex="${ei}" data-set="${si}">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      body.addEventListener('click', (e) => {
+        const t = e.target;
+
+        if (t.closest('#edit-add-exercise-btn')) {
+          document.getElementById('edit-add-exercise-block')?.classList.remove('hidden');
+          document.getElementById('edit-exercise-search')?.focus();
+          return;
+        }
+        if (t.closest('#edit-close-add-exercise')) {
+          document.getElementById('edit-add-exercise-block')?.classList.add('hidden');
+          return;
+        }
+
+        const resultItem = t.closest('.exercise-result-item');
+        if (resultItem) {
+          const exData = WT.Exercises.getById(resultItem.dataset.exId);
+          if (exData) {
+            editLog.exercises.push({
+              id: exData.id, name: exData.name,
+              muscleGroups: exData.muscleGroups, isBodyweight: exData.isBodyweight,
+              sets: [{ reps: null, weight: null, done: false }],
+            });
+            document.getElementById('edit-add-exercise-block')?.classList.add('hidden');
+            document.getElementById('edit-exercise-search').value = '';
+            document.getElementById('edit-exercise-results').innerHTML = '';
+            reRenderList();
+          }
+          return;
+        }
+
+        const addSetBtn = t.closest('[data-add-set]');
+        if (addSetBtn) {
+          const ei = parseInt(addSetBtn.dataset.addSet);
+          const sets = editLog.exercises[ei]?.sets;
+          if (sets) {
+            const last = sets[sets.length - 1];
+            sets.push({ reps: last?.reps || null, weight: last?.weight || null, done: false });
+            reRenderSets(ei);
+          }
+          return;
+        }
+
+        const checkBtn = t.closest('.set-check-btn');
+        if (checkBtn) {
+          const ei = parseInt(checkBtn.dataset.ex);
+          const si = parseInt(checkBtn.dataset.set);
+          const set = editLog.exercises[ei]?.sets[si];
+          if (set) { set.done = !set.done; reRenderSets(ei); }
+          return;
+        }
+
+        const delSetBtn = t.closest('.set-delete-btn');
+        if (delSetBtn) {
+          const ei = parseInt(delSetBtn.dataset.ex);
+          const si = parseInt(delSetBtn.dataset.set);
+          if (editLog.exercises[ei]) {
+            editLog.exercises[ei].sets.splice(si, 1);
+            reRenderSets(ei);
+          }
+          return;
+        }
+
+        const removeExBtn = t.closest('[data-remove-ex]');
+        if (removeExBtn) {
+          editLog.exercises.splice(parseInt(removeExBtn.dataset.removeEx), 1);
+          reRenderList();
+          return;
+        }
+
+        if (t.closest('#edit-save-btn')) {
+          const notesEl = document.getElementById('edit-session-notes');
+          if (notesEl) editLog.notes = notesEl.value.trim();
+          WT.Storage.saveLog(editLog);
+          WT.App.closeModal();
+          WT.App.toast('Workout updated!', 'success');
+          if (onSaved) onSaved();
+        }
+      });
+
+      body.addEventListener('input', (e) => {
+        const t = e.target;
+        if (t.id === 'edit-exercise-search') {
+          const results = WT.Exercises.search(t.value).slice(0, 20);
+          const el = document.getElementById('edit-exercise-results');
+          if (!el) return;
+          el.innerHTML = results.length
+            ? results.map((ex) => `
+                <div class="exercise-result-item" data-ex-id="${ex.id}">
+                  <div>
+                    <div class="exercise-result-name">${ex.name}${ex.isCustom ? '<span class="custom-ex-badge">Custom</span>' : ''}</div>
+                    <div class="exercise-result-groups">${WT.Exercises.formatMuscles(ex)}</div>
+                  </div>
+                  ${ex.isBodyweight ? '<span class="badge badge-muscle">BW</span>' : ''}
+                </div>`).join('')
+            : '<div style="padding:12px 16px;color:var(--text-muted);font-size:0.875rem;">No exercises found</div>';
+          return;
+        }
+        if (t.dataset.field) {
+          const ei = parseInt(t.dataset.ex);
+          const si = parseInt(t.dataset.set);
+          if (editLog.exercises[ei]) {
+            editLog.exercises[ei].sets[si][t.dataset.field] = t.value ? parseFloat(t.value) : null;
+          }
+        }
+      });
+    }, 50);
+  }
+
   // ── Drag-drop ──────────────────────────────────────────────
 
   function _registerDragDrop() {
@@ -823,5 +1021,5 @@ WT.WorkoutLogger = (function () {
     });
   }
 
-  return { render, afterRender, destroy };
+  return { render, afterRender, destroy, showEditModal };
 })();

@@ -248,6 +248,15 @@ WT.Calendar = (function () {
     // Close day detail
     if (t.closest('#close-day-detail')) { _closeDayDetail(); return; }
 
+    // Click on a logged workout row → open edit modal
+    const workoutRow = t.closest('.workout-summary-row[data-log-id]');
+    if (workoutRow) {
+      WT.WorkoutLogger.showEditModal(workoutRow.dataset.logId, () => {
+        _openDayDetail(_selectedDay);
+      });
+      return;
+    }
+
     // Day cell click
     const dayCell = t.closest('.calendar-day');
     if (dayCell && dayCell.dataset.date) {
