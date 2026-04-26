@@ -162,7 +162,13 @@ WT.Calendar = (function () {
               <div class="workout-summary-name">${exercises.length} exercise${exercises.length !== 1 ? 's' : ''} · ${totalSets} sets</div>
               <div class="workout-summary-meta">${log.startTime || ''} · ${muscleStr}</div>
             </div>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted)"><polyline points="9 18 15 12 9 6"/></svg>
+            <button class="icon-btn edit-workout-btn" data-edit-log="${log.id}" aria-label="Edit workout"
+              style="color:var(--text-muted);width:36px;height:36px;flex-shrink:0;">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+              </svg>
+            </button>
           </div>
         `;
       }).join('');
@@ -248,10 +254,10 @@ WT.Calendar = (function () {
     // Close day detail
     if (t.closest('#close-day-detail')) { _closeDayDetail(); return; }
 
-    // Click on a logged workout row → open edit modal
-    const workoutRow = t.closest('.workout-summary-row[data-log-id]');
-    if (workoutRow) {
-      WT.WorkoutLogger.showEditModal(workoutRow.dataset.logId, () => {
+    // Pencil edit button on a workout row
+    const editBtn = t.closest('[data-edit-log]');
+    if (editBtn) {
+      WT.WorkoutLogger.showEditModal(editBtn.dataset.editLog, () => {
         _openDayDetail(_selectedDay);
       });
       return;

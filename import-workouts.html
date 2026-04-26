@@ -211,26 +211,40 @@
     existing.sort((a, b) => a.date.localeCompare(b.date));
     localStorage.setItem(KEY_LOGS, JSON.stringify(existing));
 
-    // ── update PRs in settings ────────────────────────────────────────────
-    let settings = {};
-    try { settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{}'); } catch (e) {}
-    settings.prs = settings.prs || {};
+    // ── update PRs in wt_records ──────────────────────────────────────────
+    // Shape: { [exerciseId]: { exerciseId, exerciseName, maxWeight, reps, date, logId } }
+    const KEY_RECORDS = 'wt_records';
+    let records = {};
+    try { records = JSON.parse(localStorage.getItem(KEY_RECORDS) || '{}'); } catch (e) {}
 
     for (const s of SESSIONS) {
       for (const ex of s.exercises) {
-        const bestSet = ex.sets.reduce((best, set) =>
-          (set.weight > (best.weight || 0)) ? set : best, {});
-        if (!bestSet.weight) continue;
-        const e1rm = bestSet.weight * (1 + bestSet.reps / 30);
-        if (!settings.prs[ex.id] || e1rm > settings.prs[ex.id]) {
-          settings.prs[ex.id] = e1rm;
+        for (const set of ex.sets) {
+          if (set.weight == null || !set.reps) continue;
+          const existing = records[ex.id];
+          if (!existing || set.weight > existing.maxWeight) {
+            records[ex.id] = {
+              exerciseId:   ex.id,
+              exerciseName: ex.name,
+              maxWeight:    set.weight,
+              reps:         set.reps,
+              date:         s.date,
+              logId:        null,
+            };
+          }
         }
       }
     }
-    // Override with known actual 1RM maxes
-    settings.prs['ex_bench_press'] = Math.max(settings.prs['ex_bench_press'] || 0, 200);
 
-    localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings));
+    // Known actual 1RM: bench press max was 200 lb
+    if (!records['ex_bench_press'] || records['ex_bench_press'].maxWeight < 200) {
+      records['ex_bench_press'] = {
+        exerciseId: 'ex_bench_press', exerciseName: 'Bench Press',
+        maxWeight: 200, reps: 1, date: '2026-04-19', logId: null,
+      };
+    }
+
+    localStorage.setItem(KEY_RECORDS, JSON.stringify(records));
 
     // ── done ──────────────────────────────────────────────────────────────
     const msg = document.getElementById('msg');

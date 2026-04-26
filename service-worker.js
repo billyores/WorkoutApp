@@ -1,5 +1,5 @@
 // WorkTrack Service Worker — Cache-First strategy for offline support
-const CACHE_NAME = 'worktrack-v2';
+const CACHE_NAME = 'worktrack-v3';
 
 const CACHE_FILES = [
   './index.html',
