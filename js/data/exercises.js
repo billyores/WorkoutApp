@@ -65,6 +65,7 @@ WT.Exercises = (function () {
     { id: 'ex_front_raise',        name: 'Front Raise',            muscleGroups: ['front-delts'],                       isBodyweight: false },
     { id: 'ex_rear_delt_fly',      name: 'Rear Delt Fly',          muscleGroups: ['rear-delts'],                        isBodyweight: false },
     { id: 'ex_arnold_press',       name: 'Arnold Press',           muscleGroups: ['shoulders', 'front-delts', 'side-delts'], isBodyweight: false },
+    { id: 'ex_upright_row',        name: 'Upright Row',            muscleGroups: ['shoulders', 'traps'],                isBodyweight: false },
 
     // ── Arms ───────────────────────────────────────────────
     { id: 'ex_barbell_curl',       name: 'Barbell Curl',           muscleGroups: ['biceps'],                            isBodyweight: false },

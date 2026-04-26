@@ -3,6 +3,7 @@ const CACHE_NAME = 'worktrack-v1';
 
 const CACHE_FILES = [
   './index.html',
+  './import-workouts.html',
   './manifest.json',
   './css/main.css',
   './js/storage.js',

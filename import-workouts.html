@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importing Workouts…</title>
+  <style>
+    body {
+      background: #121212;
+      color: #e0e0e0;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      gap: 16px;
+    }
+    h2 { margin: 0; font-size: 1.2rem; }
+    p  { margin: 0; color: #aaa; font-size: 0.9rem; text-align: center; }
+    .status { font-size: 1rem; color: #4fc3f7; }
+  </style>
+</head>
+<body>
+  <h2>WorkTrack</h2>
+  <p class="status" id="msg">Importing workout history…</p>
+  <p>You will be redirected automatically.</p>
+
+  <script>
+  (function () {
+    // ── helpers ──────────────────────────────────────────────────────────
+    function uuid() {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+      });
+    }
+
+    function makeSets(count, reps, weight) {
+      return Array.from({ length: count }, (_, i) => ({
+        setNumber: i + 1,
+        reps,
+        weight,
+        notes: '',
+        done: true,
+      }));
+    }
+
+    function makeExercise(id, name, muscleGroups, isBodyweight, sets) {
+      return { id, name, muscleGroups, isBodyweight, sets };
+    }
+
+    // ── historical sessions parsed from 2026 Workouts - 5x5.pdf ─────────
+    const SESSIONS = [
+      {
+        date: '2026-03-07', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,70)),
+          makeExercise('ex_ohp',         'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,65)),
+          makeExercise('ex_deadlift',    'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,65)),
+        ],
+      },
+      {
+        date: '2026-03-09', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',       ['quads','hamstrings','glutes'],        false, makeSets(5,5,75)),
+          makeExercise('ex_barbell_row', 'Barbell Row', ['back','lats','biceps'],               false, makeSets(5,5,65)),
+          makeExercise('ex_bench_press', 'Bench Press', ['chest','front-delts','triceps'],      false, makeSets(5,5,135)),
+        ],
+      },
+      {
+        date: '2026-03-13', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',        'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,80)),
+          makeExercise('ex_ohp',          'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,70)),
+          makeExercise('ex_deadlift',     'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,70)),
+          makeExercise('ex_barbell_curl', 'Barbell Curl',         ['biceps'],                              false, makeSets(3,10,50)),
+        ],
+      },
+      {
+        date: '2026-03-15', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',       ['quads','hamstrings','glutes'],        false, makeSets(5,5,85)),
+          makeExercise('ex_barbell_row', 'Barbell Row', ['back','lats','biceps'],               false, makeSets(5,5,70)),
+          makeExercise('ex_bench_press', 'Bench Press', ['chest','front-delts','triceps'],      false, makeSets(5,5,140)),
+        ],
+      },
+      {
+        date: '2026-03-17', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',    'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,100)),
+          makeExercise('ex_ohp',      'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,75)),
+          makeExercise('ex_deadlift', 'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,100)),
+        ],
+      },
+      {
+        date: '2026-03-19', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',       ['quads','hamstrings','glutes'],        false, makeSets(5,5,110)),
+          makeExercise('ex_barbell_row', 'Barbell Row', ['back','lats','biceps'],               false, makeSets(5,5,80)),
+          makeExercise('ex_bench_press', 'Bench Press', ['chest','front-delts','triceps'],      false, makeSets(5,5,150)),
+        ],
+      },
+      {
+        date: '2026-03-21', startTime: '07:00', endTime: '08:00',
+        notes: 'Lower back uncomfortable after golf the day before.',
+        exercises: [
+          makeExercise('ex_squat',    'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,115)),
+          makeExercise('ex_ohp',      'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,80)),
+          makeExercise('ex_deadlift', 'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,115)),
+        ],
+      },
+      {
+        date: '2026-03-23', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',       ['quads','hamstrings','glutes'],        false, makeSets(5,5,120)),
+          makeExercise('ex_barbell_row', 'Barbell Row', ['back','lats','biceps'],               false, makeSets(5,5,90)),
+          makeExercise('ex_bench_press', 'Bench Press', ['chest','front-delts','triceps'],      false, makeSets(5,5,155)),
+        ],
+      },
+      {
+        date: '2026-03-30', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',    'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,125)),
+          makeExercise('ex_ohp',      'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,85)),
+          makeExercise('ex_deadlift', 'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,115)),
+        ],
+      },
+      {
+        date: '2026-04-01', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',       ['quads','hamstrings','glutes'],        false, makeSets(5,5,130)),
+          makeExercise('ex_barbell_row', 'Barbell Row', ['back','lats','biceps'],               false, makeSets(5,5,95)),
+          makeExercise('ex_bench_press', 'Bench Press', ['chest','front-delts','triceps'],      false, makeSets(5,5,160)),
+        ],
+      },
+      {
+        date: '2026-04-07', startTime: '07:00', endTime: '08:00',
+        notes: 'Knee issues from hiking.',
+        exercises: [
+          makeExercise('ex_squat',    'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,135)),
+          makeExercise('ex_ohp',      'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,90)),
+          makeExercise('ex_deadlift', 'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,120)),
+        ],
+      },
+      {
+        date: '2026-04-12', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_squat',       'Squat',       ['quads','hamstrings','glutes'],        false, makeSets(5,5,135)),
+          makeExercise('ex_barbell_row', 'Barbell Row', ['back','lats','biceps'],               false, makeSets(5,5,100)),
+          makeExercise('ex_bench_press', 'Bench Press', ['chest','front-delts','triceps'],      false, makeSets(5,5,165)),
+        ],
+      },
+      {
+        date: '2026-04-14', startTime: '07:00', endTime: '08:00',
+        notes: 'Knee issue still.',
+        exercises: [
+          makeExercise('ex_squat',    'Squat',                ['quads','hamstrings','glutes'],          false, makeSets(5,5,135)),
+          makeExercise('ex_ohp',      'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],    false, makeSets(5,5,95)),
+          makeExercise('ex_deadlift', 'Deadlift',             ['back','hamstrings','glutes','traps'],   false, makeSets(5,5,120)),
+        ],
+      },
+      {
+        date: '2026-04-19', startTime: '07:00', endTime: '08:00', notes: '',
+        exercises: [
+          makeExercise('ex_ohp',          'Overhead Press (OHP)', ['shoulders','front-delts','triceps'],  false, makeSets(3,10,75)),
+          makeExercise('ex_shrug',        'Barbell Shrug',        ['traps'],                              false, [
+            { setNumber: 1, reps: 10, weight: 35, notes: '', done: true },
+            { setNumber: 2, reps: 10, weight: 40, notes: '', done: true },
+            { setNumber: 3, reps: 10, weight: 45, notes: '', done: true },
+          ]),
+          makeExercise('ex_upright_row',  'Upright Row',          ['shoulders','traps'],                  false, makeSets(3,10,75)),
+          makeExercise('ex_bench_press',  'Bench Press',          ['chest','front-delts','triceps'],      false, makeSets(3,10,135)),
+          makeExercise('ex_incline_bench','Incline Bench Press',  ['chest','front-delts','triceps'],      false, makeSets(3,10,90)),
+          makeExercise('ex_db_fly',       'Dumbbell Fly',         ['chest'],                              false, makeSets(3,10,30)),
+        ],
+      },
+    ];
+
+    // ── write to localStorage ─────────────────────────────────────────────
+    const KEY_LOGS = 'wt_workoutLogs';
+    const KEY_SETTINGS = 'wt_settings';
+
+    // load existing logs to avoid duplicates
+    let existing = [];
+    try { existing = JSON.parse(localStorage.getItem(KEY_LOGS) || '[]'); } catch (e) {}
+
+    const existingDates = new Set(existing.map(w => w.date));
+    let imported = 0;
+    let skipped = 0;
+
+    for (const s of SESSIONS) {
+      if (existingDates.has(s.date)) {
+        skipped++;
+        continue;
+      }
+      existing.push({
+        id: uuid(),
+        date: s.date,
+        startTime: s.startTime,
+        endTime: s.endTime,
+        exercises: s.exercises,
+        notes: s.notes,
+        planRef: null,
+      });
+      imported++;
+    }
+
+    // sort ascending
+    existing.sort((a, b) => a.date.localeCompare(b.date));
+    localStorage.setItem(KEY_LOGS, JSON.stringify(existing));
+
+    // ── update PRs in settings ────────────────────────────────────────────
+    let settings = {};
+    try { settings = JSON.parse(localStorage.getItem(KEY_SETTINGS) || '{}'); } catch (e) {}
+    settings.prs = settings.prs || {};
+
+    for (const s of SESSIONS) {
+      for (const ex of s.exercises) {
+        const bestSet = ex.sets.reduce((best, set) =>
+          (set.weight > (best.weight || 0)) ? set : best, {});
+        if (!bestSet.weight) continue;
+        const e1rm = bestSet.weight * (1 + bestSet.reps / 30);
+        if (!settings.prs[ex.id] || e1rm > settings.prs[ex.id]) {
+          settings.prs[ex.id] = e1rm;
+        }
+      }
+    }
+    localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings));
+
+    // ── done ──────────────────────────────────────────────────────────────
+    const msg = document.getElementById('msg');
+    if (imported > 0) {
+      msg.textContent = `Imported ${imported} workout${imported > 1 ? 's' : ''}${skipped ? ` (${skipped} already existed)` : ''}. Redirecting…`;
+    } else {
+      msg.textContent = `All ${skipped} workouts already imported. Redirecting…`;
+    }
+
+    setTimeout(() => { window.location.href = './index.html'; }, 1800);
+  })();
+  </script>
+</body>
+</html>
