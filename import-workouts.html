@@ -227,6 +227,9 @@
         }
       }
     }
+    // Override with known actual 1RM maxes
+    settings.prs['ex_bench_press'] = Math.max(settings.prs['ex_bench_press'] || 0, 200);
+
     localStorage.setItem(KEY_SETTINGS, JSON.stringify(settings));
 
     // ── done ──────────────────────────────────────────────────────────────
