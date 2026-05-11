@@ -35,7 +35,17 @@
 
     const before = exercises.length;
 
-    // Deduplicate: keep the first occurrence of each normalised name
+    // Remove any "Forearm Roll" variants that aren't exactly "Forearm Rolls"
+    // then deduplicate remaining by normalised name
+    const PREFER = { 'forearm roll': 'Forearm Rolls' }; // rename singular → plural
+
+    // First pass: rename unwanted variants to the preferred name
+    for (const ex of exercises) {
+      const norm = ex.name.trim().toLowerCase();
+      if (PREFER[norm]) ex.name = PREFER[norm];
+    }
+
+    // Second pass: deduplicate by normalised name, keeping first occurrence
     const seen = new Map();
     const deduped = [];
     for (const ex of exercises) {
