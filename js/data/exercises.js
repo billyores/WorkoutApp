@@ -125,13 +125,14 @@ WT.Exercises = (function () {
   }
 
   function getById(id) {
-    return EXERCISES.find((e) => e.id === id) || null;
+    return getAll().find((e) => e.id === id) || null;
   }
 
   function search(query) {
-    if (!query) return EXERCISES;
+    const all = getAll();
+    if (!query) return all;
     const q = query.toLowerCase().trim();
-    return EXERCISES.filter(
+    return all.filter(
       (e) =>
         e.name.toLowerCase().includes(q) ||
         e.muscleGroups.some((g) => g.includes(q) || MUSCLE_GROUPS[g]?.toLowerCase().includes(q))
@@ -139,7 +140,7 @@ WT.Exercises = (function () {
   }
 
   function getByMuscleGroup(group) {
-    return EXERCISES.filter((e) => e.muscleGroups.includes(group));
+    return getAll().filter((e) => e.muscleGroups.includes(group));
   }
 
   function getMuscleGroups() {
