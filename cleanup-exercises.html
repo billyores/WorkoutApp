@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cleaning up exercises…</title>
+  <style>
+    body {
+      background: #121212;
+      color: #e0e0e0;
+      font-family: system-ui, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      gap: 16px;
+    }
+    h2 { margin: 0; font-size: 1.2rem; }
+    p  { margin: 0; color: #aaa; font-size: 0.9rem; text-align: center; }
+    .status { font-size: 1rem; color: #4fc3f7; }
+  </style>
+</head>
+<body>
+  <h2>WorkTrack</h2>
+  <p class="status" id="msg">Cleaning up duplicate exercises…</p>
+  <p>You will be redirected automatically.</p>
+
+  <script>
+  (function () {
+    const KEY = 'wt_customExercises';
+    let exercises = [];
+    try { exercises = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) {}
+
+    const before = exercises.length;
+
+    // Deduplicate: keep the first occurrence of each normalised name
+    const seen = new Map();
+    const deduped = [];
+    for (const ex of exercises) {
+      const key = ex.name.trim().toLowerCase();
+      if (!seen.has(key)) {
+        seen.set(key, true);
+        deduped.push(ex);
+      }
+    }
+
+    const removed = before - deduped.length;
+    localStorage.setItem(KEY, JSON.stringify(deduped));
+
+    const msg = document.getElementById('msg');
+    msg.textContent = removed > 0
+      ? `Removed ${removed} duplicate exercise${removed > 1 ? 's' : ''}. Redirecting…`
+      : `No duplicates found. Redirecting…`;
+
+    setTimeout(() => { window.location.href = './index.html'; }, 1800);
+  })();
+  </script>
+</body>
+</html>
