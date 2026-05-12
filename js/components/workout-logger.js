@@ -728,7 +728,11 @@ WT.WorkoutLogger = (function () {
 
   // ── Custom Exercise Creation ───────────────────────────────
 
-  function _showCreateCustomModal() {
+  function showCreateExerciseModal(onSaved) {
+    _showCreateCustomModal(onSaved);
+  }
+
+  function _showCreateCustomModal(onSaved) {
     const muscleGroups = WT.Exercises.getMuscleGroups();
     const muscleOptions = Object.entries(muscleGroups)
       .map(([id, label]) => `<option value="${id}">${label}</option>`)
@@ -788,8 +792,10 @@ WT.WorkoutLogger = (function () {
         WT.App.closeModal();
         WT.App.toast(`"${name}" added to your exercises.`, 'success');
 
-        // Auto-add to current session if one is active
-        if (_session) {
+        if (onSaved) {
+          onSaved(ex);
+        } else if (_session) {
+          // Auto-add to current session if one is active and no external callback
           _addExercise(ex.id);
           _container.querySelector('#add-exercise-block')?.classList.add('hidden');
         }
@@ -1021,5 +1027,5 @@ WT.WorkoutLogger = (function () {
     });
   }
 
-  return { render, afterRender, destroy, showEditModal };
+  return { render, afterRender, destroy, showEditModal, showCreateExerciseModal };
 })();

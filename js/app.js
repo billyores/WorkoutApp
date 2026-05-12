@@ -206,6 +206,24 @@ WT.App = (function () {
       });
     });
 
+    // My Exercises: add button
+    document.getElementById('add-custom-ex-settings-btn').addEventListener('click', () => {
+      WT.WorkoutLogger.showCreateExerciseModal(() => _renderCustomExercises());
+    });
+
+    // My Exercises: delete button (delegated)
+    document.getElementById('custom-exercises-list').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-delete-custom-ex]');
+      if (!btn) return;
+      const id = btn.dataset.deleteCustomEx;
+      const name = btn.dataset.exName;
+      if (confirm(`Remove "${name}" from your exercises?`)) {
+        WT.Storage.deleteCustomExercise(id);
+        _renderCustomExercises();
+        toast(`"${name}" removed.`, 'info');
+      }
+    });
+
     // Clear data
     document.getElementById('clear-data-btn').addEventListener('click', () => {
       if (confirm('Delete ALL workout data? This cannot be undone.')) {
@@ -296,6 +314,36 @@ WT.App = (function () {
     `;
   }
 
+  function _renderCustomExercises() {
+    const container = document.getElementById('custom-exercises-list');
+    if (!container) return;
+    const customs = WT.Storage.getCustomExercises();
+    if (!customs.length) {
+      container.innerHTML = '<p class="settings-hint">No custom exercises yet.</p>';
+      return;
+    }
+    const groups = WT.Exercises.getMuscleGroups();
+    container.innerHTML = customs.map((ex) => `
+      <div style="display:flex;align-items:center;justify-content:space-between;
+        padding:8px 0;border-bottom:1px solid var(--border);">
+        <div>
+          <div style="font-weight:600;font-size:0.9375rem;">${ex.name}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);">
+            ${ex.muscleGroups.map((g) => groups[g] || g).join(', ')}
+            ${ex.isBodyweight ? ' · Bodyweight' : ''}
+          </div>
+        </div>
+        <button class="icon-btn" data-delete-custom-ex="${ex.id}" data-ex-name="${ex.name}"
+          aria-label="Remove ${ex.name}" style="color:var(--danger);width:36px;height:36px;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
+          </svg>
+        </button>
+      </div>
+    `).join('');
+  }
+
   function _addDays(dateStr, n) {
     const d = new Date(dateStr + 'T00:00:00');
     d.setDate(d.getDate() + n);
@@ -317,6 +365,7 @@ WT.App = (function () {
     // About Me: sync height inputs and re-render injury checkboxes
     _syncHeightInputs();
     _renderProfileInjuries();
+    _renderCustomExercises();
 
     // Storage usage
     const usageEl = document.getElementById('storage-usage');
