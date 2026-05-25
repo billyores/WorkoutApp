@@ -201,16 +201,22 @@ WT.WorkoutLogger = (function () {
 
     if (!workoutDays.length) return '';
 
-    const btns = workoutDays.map(({ label, idx }) => {
-      const isNext = nextDay && label === nextDay.label;
-      return `<button class="btn btn-sm ${isNext ? 'btn-secondary' : 'btn-ghost'} load-plan-day-btn"
-        data-plan-day-idx="${idx}">${label}${isNext ? ' ✓' : ''}</button>`;
+    const nextIdx = workoutDays.find(({ label }) => nextDay && label === nextDay.label)?.idx
+      ?? workoutDays[0].idx;
+
+    const selectors = workoutDays.map(({ label, idx }) => {
+      const isSelected = idx === nextIdx;
+      return `<button class="btn btn-sm ${isSelected ? 'btn-secondary' : 'btn-ghost'} plan-day-select-btn"
+        data-plan-day-idx="${idx}">${label}</button>`;
     }).join('');
 
     return `
       <div class="plan-banner" style="flex-direction:column;align-items:flex-start;gap:10px;">
-        <div class="plan-banner-text">📋 ${planData.name}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">${btns}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+          <div class="plan-banner-text">📋 ${planData.name}</div>
+          <button class="btn btn-sm btn-secondary" id="load-plan-day-btn" data-plan-day-idx="${nextIdx}">Load</button>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">${selectors}</div>
       </div>
     `;
   }
@@ -336,9 +342,23 @@ WT.WorkoutLogger = (function () {
       return;
     }
 
-    // Load plan day (specific day chosen by user)
-    const planDayBtn = t.closest('.load-plan-day-btn');
-    if (planDayBtn) { _loadPlanDay(parseInt(planDayBtn.dataset.planDayIdx, 10)); return; }
+    // Plan day selector — highlight the chosen day and update Load button
+    const selectBtn = t.closest('.plan-day-select-btn');
+    if (selectBtn) {
+      const banner = selectBtn.closest('.plan-banner');
+      banner.querySelectorAll('.plan-day-select-btn').forEach((b) => {
+        b.classList.remove('btn-secondary');
+        b.classList.add('btn-ghost');
+      });
+      selectBtn.classList.remove('btn-ghost');
+      selectBtn.classList.add('btn-secondary');
+      banner.querySelector('#load-plan-day-btn').dataset.planDayIdx = selectBtn.dataset.planDayIdx;
+      return;
+    }
+
+    // Load plan day
+    const loadBtn = t.closest('#load-plan-day-btn');
+    if (loadBtn) { _loadPlanDay(parseInt(loadBtn.dataset.planDayIdx, 10)); return; }
 
     // Show add exercise UI
     if (t.closest('#add-exercise-btn')) {
