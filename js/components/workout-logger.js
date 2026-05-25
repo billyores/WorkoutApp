@@ -211,12 +211,12 @@ WT.WorkoutLogger = (function () {
     }).join('');
 
     return `
-      <div class="plan-banner" style="flex-direction:column;align-items:flex-start;gap:10px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+      <div class="plan-banner">
+        <div>
           <div class="plan-banner-text">📋 ${planData.name}</div>
-          <button class="btn btn-sm btn-secondary" id="load-plan-day-btn" data-plan-day-idx="${nextIdx}">Load</button>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;">${selectors}</div>
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">${selectors}</div>
+        <button class="btn btn-sm btn-secondary" id="load-plan-day-btn" data-plan-day-idx="${nextIdx}" style="flex-shrink:0;">Load</button>
       </div>
     `;
   }
