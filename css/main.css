@@ -914,6 +914,31 @@ small{ font-size: 0.8125rem; color: var(--text-muted); }
 .workout-summary-time { font-size: 0.8125rem; color: var(--accent); margin-top: 1px; }
 .workout-summary-meta { font-size: 0.8125rem; color: var(--text-muted); }
 
+/* ── 1000 lb Club ───────────────────────────────────────── */
+.club-1000-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.club-1000-card.achieved {
+  border-color: var(--success);
+  background: color-mix(in srgb, var(--success) 8%, var(--bg-card));
+}
+.progress-bar-track {
+  height: 8px;
+  background: var(--bg-elevated);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width 0.4s ease;
+}
+.progress-bar-fill.achieved { background: var(--success); }
+
 /* ── 10. Plan Builder ────────────────────────────────────── */
 .plans-view {
   padding: var(--sp-4);

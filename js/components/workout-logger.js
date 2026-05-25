@@ -109,6 +109,10 @@ WT.WorkoutLogger = (function () {
           <div id="home-goals-wrapper" style="margin-top:20px;">
             ${WT.Goals ? WT.Goals.buildHomeProgressHTML() : ''}
           </div>
+          <!-- 1000 lb Club tracker -->
+          <div id="home-1000club-wrapper" style="margin-top:16px;">
+            ${_build1000ClubHTML()}
+          </div>
           <button class="btn btn-ghost btn-block hidden" id="add-exercise-btn">
             + Add Exercise
           </button>
@@ -132,6 +136,49 @@ WT.WorkoutLogger = (function () {
           <div class="rest-timer-fill" id="rest-fill" style="width:100%"></div>
         </div>
         <button class="btn btn-sm btn-secondary" id="skip-rest-btn">Skip</button>
+      </div>
+    `;
+  }
+
+  function _build1000ClubHTML() {
+    const TARGET = 1000;
+    const LIFTS  = [
+      { id: 'ex_squat',       label: 'Squat' },
+      { id: 'ex_bench_press', label: 'Bench' },
+      { id: 'ex_deadlift',    label: 'Deadlift' },
+    ];
+    const prs  = WT.Storage.getPRs();
+    const e1rm = (pr) => pr ? Math.round(pr.maxWeight * (1 + pr.reps / 30)) : 0;
+
+    const lifts = LIFTS.map((l) => ({ ...l, e1rm: e1rm(prs[l.id]) }));
+    const total = lifts.reduce((s, l) => s + l.e1rm, 0);
+    const pct   = Math.min(100, Math.round((total / TARGET) * 100));
+    const achieved = total >= TARGET;
+
+    const liftCols = lifts.map((l) => `
+      <div style="text-align:center;flex:1;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:2px;">${l.label}</div>
+        <div style="font-size:1rem;font-weight:700;color:${l.e1rm ? 'var(--text-primary)' : 'var(--text-muted)'};">
+          ${l.e1rm ? `${l.e1rm} lb` : '—'}
+        </div>
+      </div>
+    `).join('');
+
+    return `
+      <div class="club-1000-card ${achieved ? 'achieved' : ''}">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
+          <span style="font-weight:700;font-size:0.9375rem;">
+            ${achieved ? '🏆' : '🎯'} 1000 lb Club
+          </span>
+          <span style="font-size:0.875rem;color:${achieved ? 'var(--success)' : 'var(--text-secondary)'};">
+            ${total} <span style="color:var(--text-muted);font-weight:400;">/ ${TARGET} lb</span>
+          </span>
+        </div>
+        <div class="progress-bar-track">
+          <div class="progress-bar-fill ${achieved ? 'achieved' : ''}" style="width:${pct}%;"></div>
+        </div>
+        <div style="display:flex;margin-top:12px;gap:4px;">${liftCols}</div>
+        ${achieved ? '<div style="text-align:center;margin-top:8px;font-size:0.8125rem;color:var(--success);font-weight:600;">Member of the 1000 lb Club!</div>' : ''}
       </div>
     `;
   }
@@ -535,6 +582,7 @@ WT.WorkoutLogger = (function () {
     c.querySelector('#session-notes-block').classList.remove('hidden');
     c.querySelector('#start-session-btn').classList.add('hidden');
     c.querySelector('#home-goals-wrapper')?.classList.add('hidden');
+    c.querySelector('#home-1000club-wrapper')?.classList.add('hidden');
     c.querySelector('#add-exercise-btn').classList.remove('hidden');
     c.querySelector('#finish-session-btn').classList.remove('hidden');
     c.querySelector('#cancel-session-btn')?.classList.remove('hidden');
