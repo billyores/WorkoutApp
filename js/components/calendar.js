@@ -155,12 +155,29 @@ WT.Calendar = (function () {
         const groups    = WT.Exercises.getMuscleGroups();
         const muscleStr = muscles.slice(0, 4).map((m) => groups[m] || m).join(', ');
 
+        const fmt12 = (t) => {
+          if (!t) return '';
+          const [h, m] = t.split(':').map(Number);
+          const ampm = h >= 12 ? 'PM' : 'AM';
+          return `${h % 12 || 12}:${String(m).padStart(2, '0')} ${ampm}`;
+        };
+        const durMin = (log.startTime && log.endTime) ? (() => {
+          const [sh, sm] = log.startTime.split(':').map(Number);
+          const [eh, em] = log.endTime.split(':').map(Number);
+          const diff = (eh * 60 + em) - (sh * 60 + sm);
+          return diff > 0 ? `${diff} min` : '';
+        })() : '';
+        const timeStr = log.startTime
+          ? (log.endTime ? `${fmt12(log.startTime)} – ${fmt12(log.endTime)}${durMin ? ` · ${durMin}` : ''}` : fmt12(log.startTime))
+          : '';
+
         return `
           <div class="workout-summary-row" data-log-id="${log.id}">
             <div class="workout-summary-icon">💪</div>
             <div class="workout-summary-info">
               <div class="workout-summary-name">${exercises.length} exercise${exercises.length !== 1 ? 's' : ''} · ${totalSets} sets</div>
-              <div class="workout-summary-meta">${log.startTime || ''} · ${muscleStr}</div>
+              ${timeStr ? `<div class="workout-summary-time">${timeStr}</div>` : ''}
+              <div class="workout-summary-meta">${muscleStr}</div>
             </div>
             <button class="icon-btn edit-workout-btn" data-edit-log="${log.id}" aria-label="Edit workout"
               style="color:var(--text-muted);width:36px;height:36px;flex-shrink:0;">

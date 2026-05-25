@@ -911,6 +911,7 @@ small{ font-size: 0.8125rem; color: var(--text-muted); }
 .workout-summary-icon { font-size: 1.25rem; }
 .workout-summary-info { flex: 1; }
 .workout-summary-name { font-weight: 600; font-size: 0.9375rem; }
+.workout-summary-time { font-size: 0.8125rem; color: var(--accent); margin-top: 1px; }
 .workout-summary-meta { font-size: 0.8125rem; color: var(--text-muted); }
 
 /* ── 10. Plan Builder ────────────────────────────────────── */
