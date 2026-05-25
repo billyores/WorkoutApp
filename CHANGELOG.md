@@ -5,6 +5,62 @@ Format: `[version] YYYY-MM-DD — description`
 
 ---
 
+## [0.7.0] 2026-05-25 — Home screen enhancements, 1000 lb Club, plan banner Load button
+
+### Added
+- **Plan banner: day selector + Load button** (`js/components/workout-logger.js`):
+  - Plan banner on Home tab now shows selector buttons for each unique workout day (e.g. "Workout A" / "Workout B" for StrongLifts)
+  - Deduplicates workout days by label so each unique day appears once
+  - **Load button** (right side of banner) loads the selected day's exercises into the active session; auto-starts session if none is in progress
+  - Selector buttons highlight the currently selected day; tapping one updates the Load button's target index
+  - Banner is removed from DOM after Load is clicked; reappears on next visit to Home tab
+  - Banner only renders when a plan is active (`WT.Storage.getActivePlan()` is non-null)
+- **1000 lb Club tracker** on Home tab — shows combined total of Squat + Bench Press + Deadlift PRs vs 1000 lb milestone; only shown once at least one of the three lifts has been logged
+- **Calendar day detail** now shows workout start time and duration (e.g. "7:15 AM · 45 min") for logged sessions
+
+### Changed
+- Plan day loading logic (`0f0307f`): switched from calendar-date-scheduled day to **next uncompleted day** based on `completedDayCount`. Missed days are always picked up on the next session instead of being skipped. Falls back to `completedDays.length` for plans saved before `completedDayCount` was added.
+
+### Fixed
+- Plan banner layout: Load button was not visible because of incorrect `flex-direction: column` override on `.plan-banner`. Fixed by removing the style override and restructuring HTML so the left `<div>` holds the plan name + selector buttons, and the Load button sits on the right with `flex-shrink: 0`. The `.plan-banner` CSS already uses `display: flex; justify-content: space-between` correctly.
+
+### Dev notes (2026-05-25 session)
+- **Load button visibility debugging**: if the Load button is not visible in the deployed app, the most likely causes are (1) stale service worker — close all tabs and reopen, or clear site data in Chrome; (2) no active plan set — go to Plans tab and activate one; (3) already clicked Load this session — banner is removed until session ends.
+- `#view-container` has `overflow-x: hidden` — any element that overflows the right edge of the screen will be clipped. Keep this in mind when adding buttons or elements to banners.
+- Service worker is at `worktrack-v11` — **must bump `CACHE_NAME` on every deploy**.
+
+---
+
+## [0.6.0] 2026-05-11 — Exercise management in settings, custom exercise bug fix
+
+### Added
+- **Exercise management in Settings drawer** (`app.js`): "My Exercises" section lists all custom exercises with a delete button; "+ Add Exercise" button opens the `showCreateExerciseModal` flow inline from settings
+- `cleanup-exercises.html` — one-time utility page to deduplicate custom exercises in localStorage (e.g. "Forearm Roll" vs "Forearm Rolls"); kept most-recently-created on conflict; safe to run multiple times
+- `CLAUDE.md` updated to reflect full current app state as of 2026-05-11
+
+### Fixed
+- Custom exercises not appearing in the workout "Add Exercise" search (`a187bd3`): `WT.Exercises.search()` and `getAll()` were not merging custom exercises from `wt_customExercises` with the built-in list
+
+### Dev notes
+- Custom exercises created via the `file://` origin are **not** accessible from the `https://billyores.github.io` origin (different localStorage scopes). Always use the live GitHub Pages URL to add custom exercises.
+
+---
+
+## [0.5.0] 2026-04-26 — Historical data import, calendar edit, Upright Row
+
+### Added
+- `import-workouts.html` — one-time page that imports 14 historical sessions (Mar 7 – Apr 19, 2026) directly into `wt_workoutLogs`; also sets Bench Press PR to 200 lb in `wt_records`
+  - Sessions cover StrongLifts 5×5 A/B split (March) → hypertrophy split (Apr 19)
+  - Lower back discomfort logged Mar 21 (golf); knee issues Apr 7 + Apr 14 (hiking)
+- **Edit workout from Calendar day detail** (`calendar.js`): pencil icon on each logged session row opens the full edit modal (same UI as workout-logger edit flow)
+- `ex_upright_row` — Upright Row added to built-in exercise list (`exercises.js`), muscles: shoulders + traps
+
+### Fixed
+- Edit button wiring and PR storage key mismatch in stats/history (`7ca075f`)
+- Service worker cache bumped to v2 then v3 to force fresh JS after these fixes
+
+---
+
 ## [0.4.0] 2026-04-23 — Goals feature, injuries stats tab, calendar red dots
 
 ### Added
