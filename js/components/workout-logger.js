@@ -186,15 +186,31 @@ WT.WorkoutLogger = (function () {
   function _buildPlanBanner(activePlan, today) {
     const planData = WT.Plans.getById(activePlan.planId);
     if (!planData) return '';
-    const day = WT.Plans.getNextPlanDay(activePlan);
-    if (!day || !day.exercises.length) return '';
+
+    // Deduplicate workout days by label, keeping the first occurrence of each unique label.
+    const allDays    = planData.weeks[0].days;
+    const nextDay    = WT.Plans.getNextPlanDay(activePlan);
+    const seen       = new Set();
+    const workoutDays = [];
+    allDays.forEach((d, idx) => {
+      if (!d.exercises.length) return; // skip rest days
+      if (seen.has(d.label)) return;
+      seen.add(d.label);
+      workoutDays.push({ label: d.label, idx });
+    });
+
+    if (!workoutDays.length) return '';
+
+    const btns = workoutDays.map(({ label, idx }) => {
+      const isNext = nextDay && label === nextDay.label;
+      return `<button class="btn btn-sm ${isNext ? 'btn-secondary' : 'btn-ghost'} load-plan-day-btn"
+        data-plan-day-idx="${idx}">${label}${isNext ? ' ✓' : ''}</button>`;
+    }).join('');
+
     return `
-      <div class="plan-banner">
-        <div>
-          <div class="plan-banner-text">📋 ${planData.name}</div>
-          <div style="font-size:0.8125rem;color:var(--text-secondary);">Today: ${day.label}</div>
-        </div>
-        <button class="btn btn-sm btn-secondary" id="load-plan-day-btn">Load</button>
+      <div class="plan-banner" style="flex-direction:column;align-items:flex-start;gap:10px;">
+        <div class="plan-banner-text">📋 ${planData.name}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">${btns}</div>
       </div>
     `;
   }
@@ -320,8 +336,9 @@ WT.WorkoutLogger = (function () {
       return;
     }
 
-    // Load plan day
-    if (t.closest('#load-plan-day-btn')) { _loadPlanDay(); return; }
+    // Load plan day (specific day chosen by user)
+    const planDayBtn = t.closest('.load-plan-day-btn');
+    if (planDayBtn) { _loadPlanDay(parseInt(planDayBtn.dataset.planDayIdx, 10)); return; }
 
     // Show add exercise UI
     if (t.closest('#add-exercise-btn')) {
@@ -429,16 +446,18 @@ WT.WorkoutLogger = (function () {
     WT.App.toast('Workout started!', 'success');
   }
 
-  function _loadPlanDay() {
+  function _loadPlanDay(dayIdx) {
     if (!_session) _startSession();
     const activePlan = WT.Storage.getActivePlan();
     if (!activePlan) return;
 
-    const day = WT.Plans.getNextPlanDay(activePlan);
+    const planData = WT.Plans.getById(activePlan.planId);
+    const day = (dayIdx != null && planData)
+      ? planData.weeks[0].days[dayIdx]
+      : WT.Plans.getNextPlanDay(activePlan);
     if (!day || !day.exercises.length) return;
 
     // Set rest timer to plan's recommended rest
-    const planData = WT.Plans.getById(activePlan.planId);
     if (planData) _restTotal = planData.restSec || 90;
 
     // Filter out exercises that use injured muscle groups
