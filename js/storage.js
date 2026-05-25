@@ -121,6 +121,11 @@ WT.Storage = (function () {
     if (!plan.completedDays.includes(dateStr)) {
       plan.completedDays.push(dateStr);
     }
+    // Advance the sequence pointer so the next Load always picks up where we left off,
+    // even if calendar days were skipped.
+    plan.completedDayCount = (plan.completedDayCount ?? plan.completedDays.length - 1) + 1;
+    // Clamp: never let it get behind the number of logged dates (shouldn't happen, but safe).
+    plan.completedDayCount = Math.max(plan.completedDayCount, plan.completedDays.length);
     saveActivePlan(plan);
   }
 

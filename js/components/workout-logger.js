@@ -139,7 +139,7 @@ WT.WorkoutLogger = (function () {
   function _buildPlanBanner(activePlan, today) {
     const planData = WT.Plans.getById(activePlan.planId);
     if (!planData) return '';
-    const day = WT.Plans.getPlannedDayForDate(activePlan, today);
+    const day = WT.Plans.getNextPlanDay(activePlan);
     if (!day || !day.exercises.length) return '';
     return `
       <div class="plan-banner">
@@ -385,10 +385,9 @@ WT.WorkoutLogger = (function () {
   function _loadPlanDay() {
     if (!_session) _startSession();
     const activePlan = WT.Storage.getActivePlan();
-    const today      = WT.App.todayStr();
     if (!activePlan) return;
 
-    const day = WT.Plans.getPlannedDayForDate(activePlan, today);
+    const day = WT.Plans.getNextPlanDay(activePlan);
     if (!day || !day.exercises.length) return;
 
     // Set rest timer to plan's recommended rest

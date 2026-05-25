@@ -564,5 +564,18 @@ WT.Plans = (function () {
     return week1.days[dayIdx] || null;
   }
 
-  return { getAll, getById, getByGoal, getGoals, getPlannedDayForDate };
+  // Get the next unfinished workout day based on actual completed count (not calendar date).
+  // This means missed days are always picked up on the next session rather than skipped.
+  function getNextPlanDay(plan) {
+    if (!plan) return null;
+    const planData = getById(plan.planId);
+    if (!planData) return null;
+    const week1    = planData.weeks[0];
+    const dayCount = week1.days.length;
+    // Fall back to completedDays.length for plans created before completedDayCount was added.
+    const done     = plan.completedDayCount ?? (plan.completedDays || []).length;
+    return week1.days[done % dayCount] || null;
+  }
+
+  return { getAll, getById, getByGoal, getGoals, getPlannedDayForDate, getNextPlanDay };
 })();

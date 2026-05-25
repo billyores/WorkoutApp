@@ -240,6 +240,7 @@ WT.PlanBuilder = (function () {
       planId,
       startDate,
       completedDays: [],
+      completedDayCount: 0,
     });
     _expandedId = null;
     _reRender();
